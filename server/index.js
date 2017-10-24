@@ -28,7 +28,7 @@ const postProductHandler = (req, res) => {
 };
 
 const putProductHandler = (req, res) => {
-  res.send('updat product');
+  res.send('update product');
 };
 
 const deleteProductHandler = (req, res) => {
