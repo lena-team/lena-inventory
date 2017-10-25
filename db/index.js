@@ -10,7 +10,7 @@ const {
 class DBInterface extends Client {
   constructor() {
     super({
-      user: process.env.LENA_INVENTORY_DB_USER || 'leo',
+      user: process.env.LENA_INVENTORY_DB_USER || 'postgres',
       host: process.env.LENA_INVENTORY_DB_HOST || 'localhost',
       database: process.env.LENA_INVENTORY_DB_DATABASE || 'inventory',
       port: process.env.LENA_INVENTORY_DB_PORT || 5432,
