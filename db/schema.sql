@@ -3,7 +3,7 @@
 
 CREATE TABLE IF NOT EXISTS category (
   cat_id serial PRIMARY KEY,
-  name varchar(40) NOT NULL,
+  name varchar(40) NOT NULL UNIQUE,
   parent_cat_id integer references category(cat_id)
 );
 
@@ -15,7 +15,6 @@ CREATE TABLE IF NOT EXISTS product (
   discounted_price money,
   cat_id integer NOT NULL references category(cat_id)
 );
-
 
 CREATE TABLE IF NOT EXISTS product_img (
   img_id serial PRIMARY KEY,
