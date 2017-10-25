@@ -43,7 +43,7 @@ class DBInterface extends Client {
     const tables = ['product', 'category', 'product_img'];
     // array of delete queries
     const queries = tables.map(table => constructDeleteQuery(table));
-    
+
     return Promise.all(queries.map(query => super.query(query)));
   }
 }
