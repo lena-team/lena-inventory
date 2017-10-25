@@ -4,7 +4,7 @@
 CREATE TABLE IF NOT EXISTS category (
   id serial PRIMARY KEY,
   name varchar(40) NOT NULL UNIQUE,
-  parent_cat_id integer references category(id)
+  parent_cat_id integer references category(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS product (
@@ -13,12 +13,12 @@ CREATE TABLE IF NOT EXISTS product (
   description text NOT NULL,
   standard_price money NOT NULL,
   discounted_price money,
-  cat_id integer NOT NULL references category(id)
+  cat_id integer references category(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS product_img (
   id serial PRIMARY KEY,
-  product_id integer NOT NULL references product(id),
+  product_id integer NOT NULL references product(id) ON DELETE CASCADE,
   img_url varchar(200) NOT NULL,
   primary_img boolean NOT NULL
 );
