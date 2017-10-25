@@ -30,7 +30,7 @@ const constructInsertQuery = (table, data) => {
 };
 
 const constructUpdateQuery = (table, data) => {
-  const pairs = Object.keys
+  const pairs = Object.keys(data)
     // id is used to retrieve row, so no need to include in pairs for updating
     .filter(key => key !== 'id')
     // put key-value pairs in `key='value'` format
