@@ -1,4 +1,4 @@
-const constructGetQuery = (table, id) => {
+module.exports.constructGetQuery = (table, id) => {
   // if id is provided, return the row with the specified id
   if (id) {
     return `SELECT * FROM ${table} WHERE id = ${id}`;
@@ -7,7 +7,7 @@ const constructGetQuery = (table, id) => {
   return `SELECT * FROM ${table}`;
 };
 
-const constructInsertQuery = (table, data) => {
+module.exports.constructInsertQuery = (table, data) => {
   const keys = Object.keys(data);
   // wrap values in single quotes as part of SQL's syntax
   const vals = keys.map(key => `'${data[key]}'`);
@@ -15,10 +15,14 @@ const constructInsertQuery = (table, data) => {
   const queryKeys = keys.join(', ');
   const queryVals = vals.join(', ');
 
-  return `INSERT INTO ${table} (${queryKeys}) VALUES (${queryVals})`;
+  return `INSERT INTO ${table} (${queryKeys}) VALUES (${queryVals}) RETURNING id`;
 };
 
-const constructUpdateQuery = (table, data) => {
+module.exports.constructUpdateQuery = (table, data) => {
+  if (data.id === undefined) {
+    throw new Error('Must provide id to update an item');
+  }
+
   const pairs = Object.keys(data)
     // id is used to retrieve row, so no need to include in pairs for updating
     .filter(key => key !== 'id')
@@ -30,9 +34,11 @@ const constructUpdateQuery = (table, data) => {
   return `UPDATE ${table} SET ${queryPairs} WHERE id = ${data.id}`;
 };
 
-module.exports = {
-  /* FOR TESTING */
-  constructGetQuery,
-  constructInsertQuery,
-  constructUpdateQuery,
+module.exports.constructDeleteQuery = (table, id) => {
+  // if id is provided, delete the row with the specified id
+  if (id) {
+    return `DELETE FROM ${table} WHERE id = ${id}`;
+  }
+  // otherwise, delete everything from table
+  return `DELETE FROM ${table}`;
 };

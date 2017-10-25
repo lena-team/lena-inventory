@@ -21,6 +21,7 @@
   "homepage": "https://github.com/lena-team/lena-inventory#readme",
   "dependencies": {
     "aws-sdk": "^2.139.0",
+    "bluebird": "^3.5.1",
     "express": "^4.16.2",
     "pg": "^7.3.0"
   },
