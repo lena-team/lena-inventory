@@ -312,7 +312,7 @@ describe('Database', () => {
         },
       ];
 
-      db.addBatchProducts(products)
+      db.addProduct(products)
         .then(() => db.getAllProducts())
         .then((results) => {
           const result1 = results.rows[0];

@@ -31,20 +31,19 @@ class DBInterface extends Client {
     return super.query(constructGetAllQuery('product'));
   }
 
-  addProduct(product) {
-    const fields = Object.keys(product);
-    const values = fields.map(field => product[field]);
-    return super.query(constructInsertQuery('product', fields), values);
-  }
-
-  addBatchProducts(products) {
-    const values = [];
-    products.forEach((product) => {
-      PRODUCT_FIELDS.forEach((field) => {
-        values.push(product[field]);
+  addProduct(productOrProductsArray) {
+    if (Array.isArray(productOrProductsArray)) {
+      const values = [];
+      productOrProductsArray.forEach((product) => {
+        PRODUCT_FIELDS.forEach((field) => {
+          values.push(product[field]);
+        });
       });
-    });
-    return super.query(constructBatchInsertQuery('product', PRODUCT_FIELDS, products.length), values);
+      return super.query(constructBatchInsertQuery('product', PRODUCT_FIELDS, productOrProductsArray.length), values);
+    }
+    const fields = Object.keys(productOrProductsArray);
+    const values = fields.map(field => productOrProductsArray[field]);
+    return super.query(constructInsertQuery('product', fields), values);
   }
 
   updateProduct(product) {
