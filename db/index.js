@@ -5,7 +5,7 @@ const {
   constructGetAllQuery,
   constructInsertQuery,
   constructUpdateQuery,
-  constructDeleteQuery,
+  constructDeleteAllQuery,
 } = require('./helpers.js');
 
 class DBInterface extends Client {
@@ -59,7 +59,7 @@ class DBInterface extends Client {
     // all existing tables in db
     const tables = ['product', 'category', 'product_img'];
     // array of delete queries
-    const queries = tables.map(table => constructDeleteQuery(table));
+    const queries = tables.map(table => constructDeleteAllQuery(table));
 
     return Promise.all(queries.map(query => super.query(query)));
   }

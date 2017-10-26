@@ -12,11 +12,6 @@ module.exports.constructUpdateQuery = (table, fields) => {
   return `UPDATE ${table} SET ${pairs.join(', ')} WHERE id = $1`;
 };
 
-module.exports.constructDeleteQuery = (table, id) => {
-  // if id is provided, delete the row with the specified id
-  if (id) {
-    return `DELETE FROM ${table} WHERE id = ${id}`;
-  }
-  // otherwise, delete everything from table
-  return `DELETE FROM ${table}`;
-};
+module.exports.constructDeleteOneQuery = table => `DELETE FROM ${table} WHERE id = $1`;
+
+module.exports.constructDeleteAllQuery = table => `DELETE FROM ${table}`;
