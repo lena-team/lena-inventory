@@ -57,6 +57,31 @@ describe('Database', () => {
       const expected = 'UPDATE product SET name=$2, description=$3, standard_price=$4 WHERE id = $1';
       expect(result).to.equal(expected);
     });
+
+    it('Should create a batch insert query for multiple products', () => {
+      const productFields = ['name', 'description', 'standard_price', 'discounted_price', 'cat_id'];
+      const table = 'product';
+      const products = [
+        {
+          name: 'p1',
+          description: 'd1',
+          standard_price: '$1.00',
+        }, {
+          name: 'p2',
+          description: 'd2',
+          standard_price: '$2.00',
+          discounted_price: '$1.00',
+        }, {
+          name: 'p3',
+          cat_id: '1',
+          description: 'd3',
+          standard_price: '$3.00',
+        },
+      ];
+      const result = dbHelpers.constructBatchInsertQuery(table, productFields, products.length);
+      const expected = 'INSERT INTO product (name, description, standard_price, discounted_price, cat_id) VALUES ($1, $2, $3, $4, $5), ($6, $7, $8, $9, $10), ($11, $12, $13, $14, $15) RETURNING id';
+      expect(result).to.equal(expected);
+    });
   });
 
   describe('Wrapper DB Query Functions', () => {
@@ -264,6 +289,55 @@ describe('Database', () => {
           expect(result.description).to.equal('new desc');
           expect(result.standard_price).to.equal('$100.00');
           expect(result.discounted_price).to.equal('$79.99');
+
+          done();
+        });
+    });
+
+    it('Should insert multiple products in one batch', (done) => {
+      const products = [
+        {
+          name: 'p1',
+          description: 'd1',
+          standard_price: '$1.00',
+        }, {
+          name: 'p2',
+          description: 'd2',
+          standard_price: '$2.00',
+          discounted_price: '$1.00',
+        }, {
+          name: 'p3',
+          description: 'd3',
+          standard_price: '$3.00',
+        },
+      ];
+
+      db.addBatchProducts(products)
+        .then(() => db.getAllProducts())
+        .then((results) => {
+          const result1 = results.rows[0];
+
+          expect(result1.name).to.equal('p1');
+          expect(result1.description).to.equal('d1');
+          expect(result1.standard_price).to.equal('$1.00');
+          expect(result1.discounted_price).to.equal(null);
+          expect(result1.cat_id).to.equal(null);
+
+          const result2 = results.rows[1];
+
+          expect(result2.name).to.equal('p2');
+          expect(result2.description).to.equal('d2');
+          expect(result2.standard_price).to.equal('$2.00');
+          expect(result2.discounted_price).to.equal('$1.00');
+          expect(result2.cat_id).to.equal(null);
+
+          const result3 = results.rows[2];
+
+          expect(result3.name).to.equal('p3');
+          expect(result3.description).to.equal('d3');
+          expect(result3.standard_price).to.equal('$3.00');
+          expect(result3.discounted_price).to.equal(null);
+          expect(result3.cat_id).to.equal(null);
 
           done();
         });
