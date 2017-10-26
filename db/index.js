@@ -33,7 +33,13 @@ class DBInterface extends Client {
   }
 
   updateProduct(product) {
-    return super.query(constructUpdateQuery('product', product));
+    if (product.id === undefined) {
+      throw new Error('Must provide id to update an item');
+    }
+
+    const fields = Object.keys(product).filter(key => key !== 'id');
+    const values = fields.map(field => product[field]);
+    return super.query(constructUpdateQuery('product', fields), [product.id, ...values]);
   }
 
   addCategory(category) {

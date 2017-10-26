@@ -7,20 +7,9 @@ module.exports.constructInsertQuery = (table, fields) => {
   return `INSERT INTO ${table} (${fields.join(', ')}) VALUES (${queryVals}) RETURNING id`;
 };
 
-module.exports.constructUpdateQuery = (table, data) => {
-  if (data.id === undefined) {
-    throw new Error('Must provide id to update an item');
-  }
-
-  const pairs = Object.keys(data)
-    // id is used to retrieve row, so no need to include in pairs for updating
-    .filter(key => key !== 'id')
-    // put key-value pairs in `key='value'` format
-    .map(key => `${key}='${data[key]}'`);
-
-  const queryPairs = pairs.join(', ');
-
-  return `UPDATE ${table} SET ${queryPairs} WHERE id = ${data.id}`;
+module.exports.constructUpdateQuery = (table, fields) => {
+  const pairs = fields.map((field, index) => `${field}=$${index + 2}`);
+  return `UPDATE ${table} SET ${pairs.join(', ')} WHERE id = $1`;
 };
 
 module.exports.constructDeleteQuery = (table, id) => {

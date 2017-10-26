@@ -40,8 +40,8 @@ describe('Database', () => {
         img_url: 'http://www.google.com/logo.jpg',
         primary_img: true,
       };
-      const result = dbHelpers.constructUpdateQuery(table, productImg);
-      const expected = 'UPDATE product_img SET img_url=\'http://www.google.com/logo.jpg\', primary_img=\'true\' WHERE id = 2';
+      const result = dbHelpers.constructUpdateQuery(table, Object.keys(productImg).filter(key => key !== 'id'));
+      const expected = 'UPDATE product_img SET img_url=$2, primary_img=$3 WHERE id = $1';
       expect(result).to.equal(expected);
     });
 
@@ -53,8 +53,8 @@ describe('Database', () => {
         description: 'desc',
         standard_price: '$100.00',
       };
-      const result = dbHelpers.constructUpdateQuery(table, product);
-      const expected = 'UPDATE product SET name=\'name\', description=\'desc\', standard_price=\'$100.00\' WHERE id = 2';
+      const result = dbHelpers.constructUpdateQuery(table, Object.keys(product).filter(key => key !== 'id'));
+      const expected = 'UPDATE product SET name=$2, description=$3, standard_price=$4 WHERE id = $1';
       expect(result).to.equal(expected);
     });
   });
