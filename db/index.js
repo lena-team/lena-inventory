@@ -4,9 +4,14 @@ const {
   constructGetOneQuery,
   constructGetAllQuery,
   constructInsertQuery,
+  constructBatchInsertQuery,
   constructUpdateQuery,
   constructDeleteAllQuery,
 } = require('./helpers.js');
+
+// Ideally, product fields should be generated dynamically from given products, however, that
+// will significantly slow the process when generating a large amount of products.
+const PRODUCT_FIELDS = ['name', 'description', 'standard_price', 'discounted_price', 'cat_id'];
 
 class DBInterface extends Client {
   constructor() {
@@ -30,6 +35,16 @@ class DBInterface extends Client {
     const fields = Object.keys(product);
     const values = fields.map(field => product[field]);
     return super.query(constructInsertQuery('product', fields), values);
+  }
+
+  addBatchProducts(products) {
+    const values = [];
+    products.forEach((product) => {
+      PRODUCT_FIELDS.forEach((field) => {
+        values.push(product[field]);
+      });
+    });
+    return super.query(constructBatchInsertQuery('product', PRODUCT_FIELDS, products.length), values);
   }
 
   updateProduct(product) {
