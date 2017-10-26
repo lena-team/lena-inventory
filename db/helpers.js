@@ -1,16 +1,11 @@
-module.exports.constructGetQuery = (table, id) => {
-  // if id is provided, return the row with the specified id
-  if (id) {
-    return `SELECT * FROM ${table} WHERE id = ${id}`;
-  }
-  // otherwise, return everything from table
-  return `SELECT * FROM ${table}`;
-};
+module.exports.constructGetOneQuery = table => `SELECT * FROM ${table} WHERE id = $1`;
 
-module.exports.constructInsertQuery = (table, data) => {
-  const keys = Object.keys(data);
+module.exports.constructGetAllQuery = table => `SELECT * FROM ${table}`;
+
+module.exports.constructInsertQuery = (table, item) => {
+  const keys = Object.keys(item);
   // wrap values in single quotes as part of SQL's syntax
-  const vals = keys.map(key => `'${data[key]}'`);
+  const vals = keys.map(key => `'${item[key]}'`);
 
   const queryKeys = keys.join(', ');
   const queryVals = vals.join(', ');

@@ -7,15 +7,14 @@ describe('Database', () => {
   describe('Query Constructor Helper Functions', () => {
     it('Should create a get query for a specific item when id is provided', () => {
       const table = 'product';
-      const id = 1;
-      const result = dbHelpers.constructGetQuery(table, id);
-      const expected = 'SELECT * FROM product WHERE id = 1';
+      const result = dbHelpers.constructGetOneQuery(table);
+      const expected = 'SELECT * FROM product WHERE id = $1';
       expect(result).to.equal(expected);
     });
 
     it('Should create a get query for all items', () => {
       const table = 'product';
-      const result = dbHelpers.constructGetQuery(table);
+      const result = dbHelpers.constructGetAllQuery(table);
       const expected = 'SELECT * FROM product';
       expect(result).to.equal(expected);
     });
@@ -183,7 +182,7 @@ describe('Database', () => {
         })
         .then((insertion) => {
           const { id } = insertion.rows[0];
-          return db.getProduct(id);
+          return db.getOneProduct(id);
         })
         .then((results) => {
           const result = results.rows[0];
@@ -218,7 +217,7 @@ describe('Database', () => {
           return db.addProduct(product1);
         })
         .then(() => db.addProduct(product2))
-        .then(() => db.getProduct())
+        .then(() => db.getAllProducts())
         .then((results) => {
           const result1 = results.rows[0];
 
@@ -257,7 +256,7 @@ describe('Database', () => {
           update.id = insertion.rows[0].id;
           return db.updateProduct(update);
         })
-        .then(() => db.getProduct(productId))
+        .then(() => db.getOneProduct(productId))
         .then((results) => {
           const result = results.rows[0];
 

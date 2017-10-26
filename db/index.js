@@ -1,7 +1,8 @@
 const { Client } = require('pg');
 const Promise = require('bluebird');
 const {
-  constructGetQuery,
+  constructGetOneQuery,
+  constructGetAllQuery,
   constructInsertQuery,
   constructUpdateQuery,
   constructDeleteQuery,
@@ -17,8 +18,12 @@ class DBInterface extends Client {
     });
   }
 
-  getProduct(id) {
-    return super.query(constructGetQuery('product', id));
+  getOneProduct(id) {
+    return super.query(constructGetOneQuery('product'), [id]);
+  }
+
+  getAllProducts() {
+    return super.query(constructGetAllQuery('product'));
   }
 
   addProduct(product) {
