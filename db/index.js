@@ -27,7 +27,9 @@ class DBInterface extends Client {
   }
 
   addProduct(product) {
-    return super.query(constructInsertQuery('product', product));
+    const fields = Object.keys(product);
+    const values = fields.map(field => product[field]);
+    return super.query(constructInsertQuery('product', fields), values);
   }
 
   updateProduct(product) {
@@ -35,11 +37,15 @@ class DBInterface extends Client {
   }
 
   addCategory(category) {
-    return super.query(constructInsertQuery('category', category));
+    const fields = Object.keys(category);
+    const values = fields.map(field => category[field]);
+    return super.query(constructInsertQuery('category', fields), values);
   }
 
   addProductImg(productImg) {
-    return super.query(constructInsertQuery('product_img', productImg));
+    const fields = Object.keys(productImg);
+    const values = fields.map(field => productImg[field]);
+    return super.query(constructInsertQuery('product_img', fields), values);
   }
 
   // for testing purposes

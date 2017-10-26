@@ -2,15 +2,9 @@ module.exports.constructGetOneQuery = table => `SELECT * FROM ${table} WHERE id 
 
 module.exports.constructGetAllQuery = table => `SELECT * FROM ${table}`;
 
-module.exports.constructInsertQuery = (table, item) => {
-  const keys = Object.keys(item);
-  // wrap values in single quotes as part of SQL's syntax
-  const vals = keys.map(key => `'${item[key]}'`);
-
-  const queryKeys = keys.join(', ');
-  const queryVals = vals.join(', ');
-
-  return `INSERT INTO ${table} (${queryKeys}) VALUES (${queryVals}) RETURNING id`;
+module.exports.constructInsertQuery = (table, fields) => {
+  const queryVals = fields.map((field, index) => `$${index + 1}`).join(', ');
+  return `INSERT INTO ${table} (${fields.join(', ')}) VALUES (${queryVals}) RETURNING id`;
 };
 
 module.exports.constructUpdateQuery = (table, data) => {

@@ -28,8 +28,8 @@ describe('Database', () => {
         discounted_price: '$7.99',
         cat_id: 1,
       };
-      const result = dbHelpers.constructInsertQuery(table, product);
-      const expected = 'INSERT INTO product (name, description, standard_price, discounted_price, cat_id) VALUES (\'nerf gun\', \'best gun in the world\', \'$10.99\', \'$7.99\', \'1\') RETURNING id';
+      const result = dbHelpers.constructInsertQuery(table, Object.keys(product));
+      const expected = 'INSERT INTO product (name, description, standard_price, discounted_price, cat_id) VALUES ($1, $2, $3, $4, $5) RETURNING id';
       expect(result).to.equal(expected);
     });
 
