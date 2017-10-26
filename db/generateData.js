@@ -1,6 +1,10 @@
 const Promise = require('bluebird');
 const DBInterface = require('./');
 
+const TOP_LEVEL_CATEGORIES_COUNT = 50;
+const SECOND_LEVEL_CATEGORIES_COUNT = 300;
+const THIRD_LEVEL_CATEGORIES_COUNT = 1800;
+
 const db = new DBInterface();
 db.connect();
 
@@ -11,14 +15,12 @@ const categories = {
 };
 
 const generateCategories = () => {
-  // 50 top level categories
-
   const topLevelCategoryGeneration = [];
   const secondLevelCategoryGeneration = [];
   const thirdLevelCategoryGeneration = [];
 
   // insert 50 top level categories
-  for (let i = 0; i < 50; i += 1) {
+  for (let i = 0; i < TOP_LEVEL_CATEGORIES_COUNT; i += 1) {
     // create category and add to db
     const category = { name: `category ${i + 1}` };
     categories[0].push(category);
@@ -36,7 +38,7 @@ const generateCategories = () => {
     })
     .then(() => {
       // insert 300 second level categories
-      for (let i = 0; i < 300; i += 1) {
+      for (let i = 0; i < SECOND_LEVEL_CATEGORIES_COUNT; i += 1) {
         // get random top level category
         const parentCatIndex = Math.floor(Math.random() * categories[0].length);
         const parentCat = categories[0][parentCatIndex];
@@ -63,7 +65,7 @@ const generateCategories = () => {
     })
     .then(() => {
       // insert 1800 third level categories
-      for (let i = 0; i < 1800; i += 1) {
+      for (let i = 0; i < THIRD_LEVEL_CATEGORIES_COUNT; i += 1) {
         // get random second level category
         const parentCatIndex = Math.floor(Math.random() * categories[1].length);
         const parentCat = categories[1][parentCatIndex];
@@ -93,4 +95,10 @@ const generateCategories = () => {
     });
 };
 
+// const generateProducts = () => {
+//   const allCategories = categories[0].concat(categories[1]).concat(categories[2]);
+
+// };
+
 generateCategories();
+// generateProducts();
