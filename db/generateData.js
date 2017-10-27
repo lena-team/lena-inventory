@@ -4,11 +4,12 @@ const DBInterface = require('./');
 const TOP_LEVEL_CATEGORIES_COUNT = 50;
 const SECOND_LEVEL_CATEGORIES_COUNT = 300;
 const THIRD_LEVEL_CATEGORIES_COUNT = 1800;
-const PRODUCTS_COUNT = 1000000;
+// gets heap out of memory error when set to 1000000
+const PRODUCTS_COUNT = 700000;
 const MAX_PRICE = 10000;
 const MIN_PRICE = 0;
 const DISCOUNT_PROBABILITY = 0.7;
-// const MAX_IMAGE_COUNT = 8;
+const MAX_IMAGE_COUNT = 8;
 const MAX_ITEMS_IN_BATCH_QUERY = 10000;
 
 const db = new DBInterface();
@@ -20,7 +21,7 @@ const categories = {
   2: [],
 };
 const products = [];
-// const productImgs = [];
+const productImgs = [];
 
 const generateCategories = () => {
   // insert 50 top level categories
@@ -148,9 +149,49 @@ const generateProducts = () => {
     });
 };
 
+const generateProductImgs = () => {
+  const promises = [];
+
+  let productImgsCount = 0;
+  let currentProductImgs;
+
+  for (let i = 0; i < products.length; i += 1) {
+    for (let j = 0; j < products[i].length; j += 1) {
+      // for each product
+      const product = products[i][j];
+
+      // get a random number of images
+      const imgCount = (Math.random() * MAX_IMAGE_COUNT) + 1;
+      for (let k = 0; k < imgCount; k += 1) {
+        // create productImg
+        const productImg = {
+          product_id: product.id,
+          img_url: `http://www.lena.com/${product.id}/${k + 1}.jpg`,
+          primary_img: k === 0,
+        };
+
+        // put productImgs in batches
+        if (productImgsCount % MAX_ITEMS_IN_BATCH_QUERY === 0) {
+          currentProductImgs = [];
+          productImgs.push(currentProductImgs);
+        }
+
+        productImgsCount += 1;
+
+        currentProductImgs.push(productImg);
+      }
+    }
+  }
+
+  productImgs.forEach(batch => promises.push(db.addProductImg(batch)));
+
+  return Promise.all(promises);
+};
+
 db.clearAllTables()
   .then(() => generateCategories())
   .then(() => generateProducts())
+  .then(() => generateProductImgs())
   .then(() => {
     db.end();
   });
