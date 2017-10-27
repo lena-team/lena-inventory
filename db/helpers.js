@@ -1,44 +1,43 @@
-module.exports.constructGetQuery = (table, id) => {
-  // if id is provided, return the row with the specified id
-  if (id) {
-    return `SELECT * FROM ${table} WHERE id = ${id}`;
+module.exports.constructGetOneQuery = table => `SELECT * FROM ${table} WHERE id = $1`;
+
+module.exports.constructGetAllQuery = table => `SELECT * FROM ${table}`;
+
+module.exports.constructInsertQuery = (table, fields) => {
+  const queryVals = fields.map((field, index) => `$${index + 1}`).join(', ');
+  return `INSERT INTO ${table} (${fields.join(', ')}) VALUES (${queryVals}) RETURNING id`;
+};
+
+const getQueryParamTemplate = (fieldsCount, itemsCount) => {
+  const result = [];
+
+  let paramsCountSoFar = 0;
+  let item = [];
+
+  while (paramsCountSoFar < fieldsCount * itemsCount) {
+    item.push(`$${paramsCountSoFar + 1}`);
+
+    paramsCountSoFar += 1;
+
+    if (paramsCountSoFar % fieldsCount === 0) {
+      result.push(`(${item.join(', ')})`);
+      item = [];
+    }
   }
-  // otherwise, return everything from table
-  return `SELECT * FROM ${table}`;
+
+  return result.join(', ');
 };
 
-module.exports.constructInsertQuery = (table, data) => {
-  const keys = Object.keys(data);
-  // wrap values in single quotes as part of SQL's syntax
-  const vals = keys.map(key => `'${data[key]}'`);
-
-  const queryKeys = keys.join(', ');
-  const queryVals = vals.join(', ');
-
-  return `INSERT INTO ${table} (${queryKeys}) VALUES (${queryVals}) RETURNING id`;
+module.exports.constructBatchInsertQuery = (table, fields, itemsCount) => {
+  const fieldsCount = Object.keys(fields).length;
+  const params = getQueryParamTemplate(fieldsCount, itemsCount);
+  return `INSERT INTO ${table} (${fields.join(', ')}) VALUES ${params} RETURNING id`;
 };
 
-module.exports.constructUpdateQuery = (table, data) => {
-  if (data.id === undefined) {
-    throw new Error('Must provide id to update an item');
-  }
-
-  const pairs = Object.keys(data)
-    // id is used to retrieve row, so no need to include in pairs for updating
-    .filter(key => key !== 'id')
-    // put key-value pairs in `key='value'` format
-    .map(key => `${key}='${data[key]}'`);
-
-  const queryPairs = pairs.join(', ');
-
-  return `UPDATE ${table} SET ${queryPairs} WHERE id = ${data.id}`;
+module.exports.constructUpdateQuery = (table, fields) => {
+  const pairs = fields.map((field, index) => `${field}=$${index + 2}`);
+  return `UPDATE ${table} SET ${pairs.join(', ')} WHERE id = $1`;
 };
 
-module.exports.constructDeleteQuery = (table, id) => {
-  // if id is provided, delete the row with the specified id
-  if (id) {
-    return `DELETE FROM ${table} WHERE id = ${id}`;
-  }
-  // otherwise, delete everything from table
-  return `DELETE FROM ${table}`;
-};
+module.exports.constructDeleteOneQuery = table => `DELETE FROM ${table} WHERE id = $1`;
+
+module.exports.constructDeleteAllQuery = table => `DELETE FROM ${table}`;

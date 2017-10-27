@@ -7,15 +7,14 @@ describe('Database', () => {
   describe('Query Constructor Helper Functions', () => {
     it('Should create a get query for a specific item when id is provided', () => {
       const table = 'product';
-      const id = 1;
-      const result = dbHelpers.constructGetQuery(table, id);
-      const expected = 'SELECT * FROM product WHERE id = 1';
+      const result = dbHelpers.constructGetOneQuery(table);
+      const expected = 'SELECT * FROM product WHERE id = $1';
       expect(result).to.equal(expected);
     });
 
     it('Should create a get query for all items', () => {
       const table = 'product';
-      const result = dbHelpers.constructGetQuery(table);
+      const result = dbHelpers.constructGetAllQuery(table);
       const expected = 'SELECT * FROM product';
       expect(result).to.equal(expected);
     });
@@ -29,8 +28,8 @@ describe('Database', () => {
         discounted_price: '$7.99',
         cat_id: 1,
       };
-      const result = dbHelpers.constructInsertQuery(table, product);
-      const expected = 'INSERT INTO product (name, description, standard_price, discounted_price, cat_id) VALUES (\'nerf gun\', \'best gun in the world\', \'$10.99\', \'$7.99\', \'1\') RETURNING id';
+      const result = dbHelpers.constructInsertQuery(table, Object.keys(product));
+      const expected = 'INSERT INTO product (name, description, standard_price, discounted_price, cat_id) VALUES ($1, $2, $3, $4, $5) RETURNING id';
       expect(result).to.equal(expected);
     });
 
@@ -41,8 +40,8 @@ describe('Database', () => {
         img_url: 'http://www.google.com/logo.jpg',
         primary_img: true,
       };
-      const result = dbHelpers.constructUpdateQuery(table, productImg);
-      const expected = 'UPDATE product_img SET img_url=\'http://www.google.com/logo.jpg\', primary_img=\'true\' WHERE id = 2';
+      const result = dbHelpers.constructUpdateQuery(table, Object.keys(productImg).filter(key => key !== 'id'));
+      const expected = 'UPDATE product_img SET img_url=$2, primary_img=$3 WHERE id = $1';
       expect(result).to.equal(expected);
     });
 
@@ -54,8 +53,33 @@ describe('Database', () => {
         description: 'desc',
         standard_price: '$100.00',
       };
-      const result = dbHelpers.constructUpdateQuery(table, product);
-      const expected = 'UPDATE product SET name=\'name\', description=\'desc\', standard_price=\'$100.00\' WHERE id = 2';
+      const result = dbHelpers.constructUpdateQuery(table, Object.keys(product).filter(key => key !== 'id'));
+      const expected = 'UPDATE product SET name=$2, description=$3, standard_price=$4 WHERE id = $1';
+      expect(result).to.equal(expected);
+    });
+
+    it('Should create a batch insert query for multiple products', () => {
+      const productFields = ['name', 'description', 'standard_price', 'discounted_price', 'cat_id'];
+      const table = 'product';
+      const products = [
+        {
+          name: 'p1',
+          description: 'd1',
+          standard_price: '$1.00',
+        }, {
+          name: 'p2',
+          description: 'd2',
+          standard_price: '$2.00',
+          discounted_price: '$1.00',
+        }, {
+          name: 'p3',
+          cat_id: '1',
+          description: 'd3',
+          standard_price: '$3.00',
+        },
+      ];
+      const result = dbHelpers.constructBatchInsertQuery(table, productFields, products.length);
+      const expected = 'INSERT INTO product (name, description, standard_price, discounted_price, cat_id) VALUES ($1, $2, $3, $4, $5), ($6, $7, $8, $9, $10), ($11, $12, $13, $14, $15) RETURNING id';
       expect(result).to.equal(expected);
     });
   });
@@ -183,7 +207,7 @@ describe('Database', () => {
         })
         .then((insertion) => {
           const { id } = insertion.rows[0];
-          return db.getProduct(id);
+          return db.getOneProduct(id);
         })
         .then((results) => {
           const result = results.rows[0];
@@ -218,7 +242,7 @@ describe('Database', () => {
           return db.addProduct(product1);
         })
         .then(() => db.addProduct(product2))
-        .then(() => db.getProduct())
+        .then(() => db.getAllProducts())
         .then((results) => {
           const result1 = results.rows[0];
 
@@ -257,7 +281,7 @@ describe('Database', () => {
           update.id = insertion.rows[0].id;
           return db.updateProduct(update);
         })
-        .then(() => db.getProduct(productId))
+        .then(() => db.getOneProduct(productId))
         .then((results) => {
           const result = results.rows[0];
 
@@ -265,6 +289,127 @@ describe('Database', () => {
           expect(result.description).to.equal('new desc');
           expect(result.standard_price).to.equal('$100.00');
           expect(result.discounted_price).to.equal('$79.99');
+
+          done();
+        });
+    });
+
+    it('Should insert multiple products in one batch', (done) => {
+      const products = [
+        {
+          name: 'p1',
+          description: 'd1',
+          standard_price: '$1.00',
+        }, {
+          name: 'p2',
+          description: 'd2',
+          standard_price: '$2.00',
+          discounted_price: '$1.00',
+        }, {
+          name: 'p3',
+          description: 'd3',
+          standard_price: '$3.00',
+        },
+      ];
+
+      db.addProduct(products)
+        .then(() => db.getAllProducts())
+        .then((results) => {
+          const result1 = results.rows[0];
+
+          expect(result1.name).to.equal('p1');
+          expect(result1.description).to.equal('d1');
+          expect(result1.standard_price).to.equal('$1.00');
+          expect(result1.discounted_price).to.equal(null);
+          expect(result1.cat_id).to.equal(null);
+
+          const result2 = results.rows[1];
+
+          expect(result2.name).to.equal('p2');
+          expect(result2.description).to.equal('d2');
+          expect(result2.standard_price).to.equal('$2.00');
+          expect(result2.discounted_price).to.equal('$1.00');
+          expect(result2.cat_id).to.equal(null);
+
+          const result3 = results.rows[2];
+
+          expect(result3.name).to.equal('p3');
+          expect(result3.description).to.equal('d3');
+          expect(result3.standard_price).to.equal('$3.00');
+          expect(result3.discounted_price).to.equal(null);
+          expect(result3.cat_id).to.equal(null);
+
+          done();
+        });
+    });
+
+    it('Should insert multiple categories in one batch', (done) => {
+      const categories = [
+        {
+          name: 'c1',
+        }, {
+          name: 'c2',
+        },
+      ];
+
+      db.addCategory(categories)
+        .then(() => db.query('SELECT * FROM category'))
+        .then((results) => {
+          const result1 = results.rows[0];
+
+          expect(result1.name).to.equal('c1');
+
+          const result2 = results.rows[1];
+
+          expect(result2.name).to.equal('c2');
+
+          done();
+        });
+    });
+
+    it('Should insert multiple product images in one batch', (done) => {
+      const product = {
+        name: 'p1',
+        description: 'd1',
+        standard_price: '$1.00',
+      };
+
+      const productImgs = [
+        {
+          img_url: 'url1',
+          primary_img: true,
+        }, {
+          img_url: 'url2',
+          primary_img: false,
+        }, {
+          img_url: 'url3',
+          primary_img: false,
+        },
+      ];
+
+      db.addProduct(product)
+        .then((insertions) => {
+          for (let i = 0; i < productImgs.length; i += 1) {
+            productImgs[i].product_id = insertions.rows[0].id;
+          }
+        })
+        .then(() => db.addProductImg(productImgs))
+        .then(() => db.query('SELECT * FROM product_img'))
+        .then((results) => {
+          const result1 = results.rows[0];
+
+          expect(result1.img_url).to.equal('url1');
+          expect(result1.primary_img).to.equal(true);
+
+          const result2 = results.rows[1];
+
+          expect(result2.img_url).to.equal('url2');
+          expect(result2.primary_img).to.equal(false);
+
+          const result3 = results.rows[2];
+
+          expect(result3.img_url).to.equal('url3');
+          expect(result3.primary_img).to.equal(false);
 
           done();
         });
