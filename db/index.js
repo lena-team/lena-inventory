@@ -9,9 +9,11 @@ const {
   constructDeleteAllQuery,
 } = require('./helpers.js');
 
-// Ideally, product fields should be generated dynamically from given products, however, that
-// will significantly slow the process when generating a large amount of products.
+// Ideally, fields should be generated dynamically from given items, however, that
+// will significantly slow the process when generating a large amount of items.
 const PRODUCT_FIELDS = ['name', 'description', 'standard_price', 'discounted_price', 'cat_id'];
+const CATEGORY_FIELDS = ['name', 'parent_cat_id'];
+const PRODUCT_IMG_FIELDS = ['product_id', 'img_url', 'primary_img'];
 
 class DBInterface extends Client {
   constructor() {
@@ -56,15 +58,33 @@ class DBInterface extends Client {
     return super.query(constructUpdateQuery('product', fields), [product.id, ...values]);
   }
 
-  addCategory(category) {
-    const fields = Object.keys(category);
-    const values = fields.map(field => category[field]);
+  addCategory(categoryOrCategoriesArray) {
+    if (Array.isArray(categoryOrCategoriesArray)) {
+      const values = [];
+      categoryOrCategoriesArray.forEach((category) => {
+        CATEGORY_FIELDS.forEach((field) => {
+          values.push(category[field]);
+        });
+      });
+      return super.query(constructBatchInsertQuery('category', CATEGORY_FIELDS, categoryOrCategoriesArray.length), values);
+    }
+    const fields = Object.keys(categoryOrCategoriesArray);
+    const values = fields.map(field => categoryOrCategoriesArray[field]);
     return super.query(constructInsertQuery('category', fields), values);
   }
 
-  addProductImg(productImg) {
-    const fields = Object.keys(productImg);
-    const values = fields.map(field => productImg[field]);
+  addProductImg(productImgOrProductImgsArray) {
+    if (Array.isArray(productImgOrProductImgsArray)) {
+      const values = [];
+      productImgOrProductImgsArray.forEach((productImg) => {
+        PRODUCT_IMG_FIELDS.forEach((field) => {
+          values.push(productImg[field]);
+        });
+      });
+      return super.query(constructBatchInsertQuery('product_img', PRODUCT_IMG_FIELDS, productImgOrProductImgsArray.length), values);
+    }
+    const fields = Object.keys(productImgOrProductImgsArray);
+    const values = fields.map(field => productImgOrProductImgsArray[field]);
     return super.query(constructInsertQuery('product_img', fields), values);
   }
 
