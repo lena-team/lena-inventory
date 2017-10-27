@@ -342,5 +342,77 @@ describe('Database', () => {
           done();
         });
     });
+
+    it('Should insert multiple categories in one batch', (done) => {
+      const categories = [
+        {
+          name: 'c1',
+        }, {
+          name: 'c2',
+        },
+      ];
+
+      db.addCategory(categories)
+        .then(() => db.query('SELECT * FROM category'))
+        .then((results) => {
+          const result1 = results.rows[0];
+
+          expect(result1.name).to.equal('c1');
+
+          const result2 = results.rows[1];
+
+          expect(result2.name).to.equal('c2');
+
+          done();
+        });
+    });
+
+    it('Should insert multiple product images in one batch', (done) => {
+      const product = {
+        name: 'p1',
+        description: 'd1',
+        standard_price: '$1.00',
+      };
+
+      const productImgs = [
+        {
+          img_url: 'url1',
+          primary_img: true,
+        }, {
+          img_url: 'url2',
+          primary_img: false,
+        }, {
+          img_url: 'url3',
+          primary_img: false,
+        },
+      ];
+
+      db.addProduct(product)
+        .then((insertions) => {
+          for (let i = 0; i < productImgs.length; i += 1) {
+            productImgs[i].product_id = insertions.rows[0].id;
+          }
+        })
+        .then(() => db.addProductImg(productImgs))
+        .then(() => db.query('SELECT * FROM product_img'))
+        .then((results) => {
+          const result1 = results.rows[0];
+
+          expect(result1.img_url).to.equal('url1');
+          expect(result1.primary_img).to.equal(true);
+
+          const result2 = results.rows[1];
+
+          expect(result2.img_url).to.equal('url2');
+          expect(result2.primary_img).to.equal(false);
+
+          const result3 = results.rows[2];
+
+          expect(result3.img_url).to.equal('url3');
+          expect(result3.primary_img).to.equal(false);
+
+          done();
+        });
+    });
   });
 });
