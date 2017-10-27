@@ -4,11 +4,12 @@ const DBInterface = require('./');
 const TOP_LEVEL_CATEGORIES_COUNT = 50;
 const SECOND_LEVEL_CATEGORIES_COUNT = 300;
 const THIRD_LEVEL_CATEGORIES_COUNT = 1800;
-const PRODUCTS_COUNT = 10000;
+const PRODUCTS_COUNT = 1000000;
 const MAX_PRICE = 10000;
 const MIN_PRICE = 0;
 const DISCOUNT_PROBABILITY = 0.7;
-const MAX_IMAGE_COUNT = 8;
+// const MAX_IMAGE_COUNT = 8;
+const MAX_ITEMS_IN_BATCH_QUERY = 10000;
 
 const db = new DBInterface();
 db.connect();
@@ -18,26 +19,25 @@ const categories = {
   1: [],
   2: [],
 };
+const products = [];
+// const productImgs = [];
 
 const generateCategories = () => {
-  const promises0 = [];
-  const promises1 = [];
-  const promises2 = [];
-
   // insert 50 top level categories
   for (let i = 0; i < TOP_LEVEL_CATEGORIES_COUNT; i += 1) {
     // create category and add to db
     const category = { name: `category ${i + 1}` };
     categories[0].push(category);
-    promises0.push(db.addCategory(category));
+    // promises0.push(db.addCategory(category));
   }
 
-  return Promise.all(promises0)
+  // return Promise.all(promises0)
+  return db.addCategory(categories[0])
     .then((insertions) => {
       // store ids of all top level categories
-      insertions.forEach((insertion, index) => {
+      insertions.rows.forEach((insertion, index) => {
         const category = categories[0][index];
-        category.id = insertion.rows[0].id;
+        category.id = insertion.id;
         category.childrenCount = 0;
       });
     })
@@ -57,15 +57,14 @@ const generateCategories = () => {
 
         // add category to categories array for later use
         categories[1].push(category);
-        promises1.push(db.addCategory(category));
       }
-      return Promise.all(promises1);
+      return db.addCategory(categories[1]);
     })
     .then((insertions) => {
       // store ids of all second level categories
-      insertions.forEach((insertion, index) => {
+      insertions.rows.forEach((insertion, index) => {
         const category = categories[1][index];
-        category.id = insertion.rows[0].id;
+        category.id = insertion.id;
         category.childrenCount = 0;
       });
     })
@@ -85,15 +84,14 @@ const generateCategories = () => {
 
         // add category to categories array for later use
         categories[2].push(category);
-        promises2.push(db.addCategory(category));
       }
-      return Promise.all(promises2);
+      return db.addCategory(categories[2]);
     })
     .then((insertions) => {
       // store ids of all third level categories
-      insertions.forEach((insertion, index) => {
+      insertions.rows.forEach((insertion, index) => {
         const category = categories[2][index];
-        category.id = insertion.rows[0].id;
+        category.id = insertion.id;
         category.childrenCount = 0;
       });
     });
@@ -103,8 +101,15 @@ const generateProducts = () => {
   const promises = [];
   const allCategories = categories[0].concat(categories[1]).concat(categories[2]);
 
+  let currentProducts;
+
   // insert 1M products
   for (let i = 0; i < PRODUCTS_COUNT; i += 1) {
+    if (i % MAX_ITEMS_IN_BATCH_QUERY === 0) {
+      currentProducts = [];
+      products.push(currentProducts);
+    }
+
     // select random category
     const catIndex = Math.floor(Math.random() * allCategories.length);
     const catId = allCategories[catIndex].id;
@@ -124,32 +129,23 @@ const generateProducts = () => {
       product.discounted_price = `$${discountedPrice}.99`;
     }
 
-    // add addProduct promise to promises array
-    promises.push(db.addProduct(product)
-      .then((insertion) => {
-        const productImgPromises = [];
-        const productId = insertion.rows[0].id;
-
-        // insert a random number of images (1-9) for that product
-        for (let j = 0; j < Math.floor(Math.random() * MAX_IMAGE_COUNT) + 1; j += 1) {
-          // make img
-          const productImg = {
-            product_id: productId,
-            img_url: `http://www.lena.com/images/${productId}/${i + 1}.jpg`,
-            primary_img: i === 0,
-          };
-
-          // add addProductImage promise to promises array
-          productImgPromises.push(db.addProductImg(productImg));
-        }
-
-        // resolve all addProductImage promises
-        return Promise.all(productImgPromises);
-      }));
+    // add product to products array
+    currentProducts.push(product);
   }
 
+  products.forEach(batch => promises.push(db.addProduct(batch)));
+
   // resolve all addProduct promises
-  return Promise.all(promises);
+  return Promise.all(promises)
+    // store product ids for later use
+    .then((batchInsertions) => {
+      for (let j = 0; j < batchInsertions.length; j += 1) {
+        const insertions = batchInsertions[j];
+        for (let k = 0; k < insertions.rows.length; k += 1) {
+          products[j][k].id = insertions.rows[k].id;
+        }
+      }
+    });
 };
 
 db.clearAllTables()
