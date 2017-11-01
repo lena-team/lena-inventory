@@ -57,5 +57,9 @@ typings/
 # dotenv environment variables file
 .env
 
+# Data
+data/*.json
+data/*.txt
+
 # Miscellaneous
 package-lock.json
