@@ -58,6 +58,10 @@ class DBInterface extends Client {
     return super.query(constructUpdateQuery('product', fields), [product.id, ...values]);
   }
 
+  getAllCategories() {
+    return super.query(constructGetAllQuery('category'));
+  }
+
   addCategory(categoryOrCategoriesArray) {
     if (Array.isArray(categoryOrCategoriesArray)) {
       const values = [];
