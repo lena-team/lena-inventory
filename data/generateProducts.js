@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const uuidv4 = require('uuid/v4');
 
-const PRODUCTS_COUNT = 10000000;
+const PRODUCTS_COUNT = 10000;
 const MAX_PRICE = 10000;
 const DISCOUNT_PROBABILITY = 0.7;
 const MAX_IMAGE_COUNT = 8;
@@ -20,7 +20,6 @@ const getProductImgs = (product) => {
   const imgs = [];
   for (let i = 0; i < Math.random() * MAX_IMAGE_COUNT; i += 1) {
     const img = {
-      productId: product.id,
       imgUrl: `http://www.lena.com/products/${product.id}/${i + 1}`,
       primaryImg: i === 0,
     };
@@ -30,13 +29,14 @@ const getProductImgs = (product) => {
 };
 
 const generateProduct = (index, categories) => {
-  const catId = categories[Math.floor(Math.random() * categories.length)];
+  const category = categories[Math.floor(Math.random() * categories.length)];
 
   const product = {
     id: uuidv4(),
+    createdAt: new Date(),
     name: `product ${index + 1}`,
     description: `description ${index + 1}`,
-    catId,
+    category: category.name,
     standardPrice: getStandardPrice(),
   };
   product.discountedPrice = getDiscountedPrice(product);
