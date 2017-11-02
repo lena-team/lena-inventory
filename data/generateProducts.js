@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const uuidv4 = require('uuid/v4');
 
-const PRODUCTS_COUNT = 10000;
+const PRODUCTS_COUNT = 10000000;
 const MAX_PRICE = 10000;
 const DISCOUNT_PROBABILITY = 0.7;
 const MAX_IMAGE_COUNT = 8;
@@ -48,7 +48,7 @@ const generateProduct = (index, categories) => {
 module.exports.generateProducts = (categories) => {
   // write to txt file line by line because stringifying
   // entire array of products will take too much memory
-  const fd = fs.openSync(path.resolve(__dirname, './products.txt'), 'w');
+  const fd = fs.openSync(path.resolve(__dirname, './products_10m.txt'), 'w');
   for (let i = 0; i < PRODUCTS_COUNT; i += 1) {
     const product = generateProduct(i, categories);
     const line = `${JSON.stringify(product)}\n`;

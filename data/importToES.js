@@ -1,11 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
-const Promise = require('bluebird');
 const { Client } = require('elasticsearch');
 const DBInterface = require('../db');
 
-const MAX_PRODUCTS_PER_BATCH = 100;
+const MAX_PRODUCTS_PER_BATCH = 10000;
 
 const db = new DBInterface();
 const client = new Client({
@@ -23,30 +22,39 @@ const getAction = product => ({
 });
 
 const importToES = () => {
-  const promises = [];
-
-  const input = fs.createReadStream(path.resolve(__dirname, './products.txt'));
+  const input = fs.createReadStream(path.resolve(__dirname, './products_10k.txt'));
   const lineReader = readline.createInterface({ input });
 
   const productArrays = [];
   let products = [];
   let count = 0;
+  let arrayIndex;
 
   lineReader.on('line', (line) => {
-    // if (count % MAX_PRODUCTS_PER_BATCH === 0) {
-    //   const arrayIndex = Math.floor(count / MAX_PRODUCTS_PER_BATCH) - 1;
+    if (count % MAX_PRODUCTS_PER_BATCH === 0) {
+      arrayIndex = Math.floor(count / MAX_PRODUCTS_PER_BATCH) - 1;
 
-    //   if (arrayIndex >= 0) {
-    //     promises.push(client.bulk({ body: products })
-    //       .then(() => {
-    //         // remove reference after import to free up memory
-    //         productArrays[arrayIndex] = undefined;
-    //       }));
-    //   }
+      if (arrayIndex >= 0) {
+        // pause until bulk query is completed
+        lineReader.pause();
 
-    //   products = [];
-    //   productArrays.push(products);
-    // }
+        client.bulk({ body: products })
+          .then(() => {
+            console.log(`Successfully imported products array ${arrayIndex}`);
+            // remove reference to prevent memory leakage
+            productArrays[arrayIndex] = null;
+            // resume after bulk query is completed
+            lineReader.resume();
+          })
+          .catch((err) => {
+            console.log('Error', err);
+          });
+      }
+
+      // create new batch for every 10000 products
+      products = [];
+      productArrays.push(products);
+    }
 
     const product = JSON.parse(line);
     products.push(getAction(product));
@@ -57,7 +65,17 @@ const importToES = () => {
   });
 
   lineReader.on('close', () => {
-    client.bulk({ body: products });
+    // import final batch before end
+    client.bulk({ body: products })
+      .then(() => {
+        console.log(`Successfully imported products array ${arrayIndex}`);
+      })
+      .catch((err) => {
+        console.log('Error', err);
+      })
+      .then(() => {
+        process.exit();
+      });
   });
 };
 
@@ -77,7 +95,7 @@ const mappings = {
 
 client.index({
   index: 'inventory',
-  type: 'product',
+  type: 'product2',
   body: { mappings },
 })
   .then(() => importToES());
