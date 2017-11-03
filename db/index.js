@@ -11,8 +11,8 @@ const {
 
 // Ideally, fields should be generated dynamically from given items, however, that
 // will significantly slow the process when generating a large amount of items.
-const PRODUCT_FIELDS = ['name', 'description', 'standard_price', 'discounted_price', 'cat_id'];
-const CATEGORY_FIELDS = ['name', 'parent_cat_id'];
+const PRODUCT_FIELDS = ['id', 'created_at', 'updated_at', 'name', 'description', 'standard_price', 'discounted_price', 'cat_id'];
+const CATEGORY_FIELDS = ['id', 'name', 'parent_cat_id'];
 const PRODUCT_IMG_FIELDS = ['product_id', 'img_url', 'primary_img'];
 
 class DBInterface extends Client {
