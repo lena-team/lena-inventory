@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS product (
 );
 
 CREATE TABLE IF NOT EXISTS product_img (
-  id char(36) PRIMARY KEY,
+  id serial PRIMARY KEY,
   product_id char(36) NOT NULL references product(id) ON DELETE CASCADE,
   img_url varchar(200) NOT NULL,
   primary_img boolean NOT NULL
