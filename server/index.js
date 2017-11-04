@@ -1,19 +1,23 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const Promise = require('bluebird');
+const { Client } = require('elasticsearch');
 
 const DBInterface = require('../db');
 const categoriesJSON = require('../data/categories.json');
 const {
   getCategoryIds,
   getDBProduct,
-  getDBProductImg,
+  getDBProductImgs,
 } = require('../db/helpers.js');
 
 const app = express();
 const PORT = 3000;
 
 const db = new DBInterface();
+const es = new Client({
+  host: 'http://elastic:elasticpassword@localhost:9200',
+});
 
 db.connect()
   .then(() => {
@@ -30,7 +34,26 @@ app.use((req, res, next) => {
   console.log(`${req.method} request on ${req.url}`);
   next();
 });
-// app.use(bodyParser.json());
+
+/* HELPER FUNCTION */
+
+const ESIndex = (ESClient, product) => (
+  ESClient.index({
+    index: 'inventory',
+    type: 'product',
+    id: product.id,
+    body: product,
+  })
+);
+
+const ESUpdate = (ESClient, product) => (
+  ESClient.update({
+    index: 'inventory',
+    type: 'product',
+    id: product.id,
+    body: { doc: product },
+  })
+);
 
 /* REQUEST HANDLERS */
 
@@ -56,14 +79,19 @@ const postProductHandler = (req, res) => {
     const categoryIds = getCategoryIds(categoriesJSON);
     const ESProduct = req.body;
 
-    const DBProductImgs = [];
-    ESProduct.productImgs.forEach((ESProductImg) => {
-      const DBProductImg = getDBProductImg(ESProductImg, ESProduct);
-      DBProductImgs.push(DBProductImg);
-    });
-
+    // normalize data
     const DBProduct = getDBProduct(ESProduct, categoryIds);
-    Promise.all([db.addProduct(DBProduct), db.addProductImg(DBProductImgs)])
+    const DBProductImgs = getDBProductImgs(ESProduct);
+
+    // insertion promises
+    const promises = [
+      db.addProduct(DBProduct),
+      db.addProductImg(DBProductImgs),
+      ESIndex(es, ESProduct),
+    ];
+
+    // send response on successful insertions
+    Promise.all(promises)
       .then(() => {
         res.send('Product added');
       })
@@ -79,11 +107,20 @@ const putProductHandler = (req, res) => {
   } else {
     const categoryIds = getCategoryIds(categoriesJSON);
     const ESProduct = req.body;
+    ESProduct.id = req.params.productId;
 
+    // normalize data
     const DBProduct = getDBProduct(ESProduct, categoryIds);
     DBProduct.id = req.params.productId;
 
-    db.updateProduct(DBProduct)
+    // update promises
+    const promises = [
+      db.updateProduct(DBProduct),
+      ESUpdate(es, ESProduct),
+    ];
+
+    // send response on successful updates
+    Promise.all(promises)
       .then(() => {
         res.send('Product added');
       })
@@ -93,9 +130,9 @@ const putProductHandler = (req, res) => {
   }
 };
 
-const deleteProductHandler = (req, res) => {
-  res.send('delete product');
-};
+// const deleteProductHandler = (req, res) => {
+//   res.send('delete product');
+// };
 
 /* PATHS */
 
@@ -103,4 +140,4 @@ app.get('/products', getAllProductsHandler);
 app.get('/products/:productId', getProductHandler);
 app.post('/products', bodyParser.json(), postProductHandler);
 app.put('/products/:productId', bodyParser.json(), putProductHandler);
-app.delete('/products/:productId', deleteProductHandler);
+// app.delete('/products/:productId', deleteProductHandler);

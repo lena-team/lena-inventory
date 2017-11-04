@@ -35,6 +35,10 @@ module.exports.getDBProductImg = (productImg, product) => ({
   primary_img: productImg.primaryImg,
 });
 
+module.exports.getDBProductImgs = product => (
+  product.productImgs.map(productImg => module.exports.getDBProductImg(productImg, product))
+);
+
 module.exports.constructGetOneQuery = table => `SELECT * FROM ${table} WHERE id = $1`;
 
 module.exports.constructGetAllQuery = table => `SELECT * FROM ${table}`;
