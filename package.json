@@ -22,8 +22,10 @@
   "dependencies": {
     "aws-sdk": "^2.139.0",
     "bluebird": "^3.5.1",
+    "body-parser": "^1.18.2",
     "elasticsearch": "^13.3.1",
     "express": "^4.16.2",
+    "lodash": "^4.17.4",
     "pg": "^7.3.0",
     "uuid": "^3.1.0"
   },
