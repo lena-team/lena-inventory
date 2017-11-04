@@ -1,3 +1,40 @@
+const _ = require('lodash');
+
+const PRODUCT_FIELDS = ['id', 'created_at', 'updated_at', 'name', 'description', 'standard_price', 'discounted_price'];
+// const PRODUCT_IMG_FIELDS = ['product_id', 'img_url', 'primary_img'];
+
+module.exports.getCategoryIds = (categoriesJSON) => {
+  const results = {};
+  categoriesJSON.categories.forEach(({ id, name }) => {
+    results[name] = id;
+  });
+  return results;
+};
+
+module.exports.getDBProduct = (product, categoryIds) => {
+  const result = {};
+
+  PRODUCT_FIELDS.forEach((field) => {
+    const camelCaseField = _.camelCase(field);
+    // use hasOwnProperty so that undefined fields will also be transferred
+    if (Object.prototype.hasOwnProperty.call(product, camelCaseField)) {
+      result[field] = product[camelCaseField];
+    }
+  });
+
+  if (Object.prototype.hasOwnProperty.call(product, 'category')) {
+    result.cat_id = categoryIds[product.category];
+  }
+
+  return result;
+};
+
+module.exports.getDBProductImg = (productImg, product) => ({
+  product_id: product.id,
+  img_url: productImg.imgUrl,
+  primary_img: productImg.primaryImg,
+});
+
 module.exports.constructGetOneQuery = table => `SELECT * FROM ${table} WHERE id = $1`;
 
 module.exports.constructGetAllQuery = table => `SELECT * FROM ${table}`;
