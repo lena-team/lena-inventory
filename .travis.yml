@@ -4,5 +4,5 @@ node_js:
 services:
   - postgresql
 before_script:
-  - psql -c 'create database inventory;' -U postgres
-  - psql inventory < ./db/schema.sql
+  - psql -c 'create database inventory_test;' -U postgres
+  - psql inventory_test < ./db/schema.sql
