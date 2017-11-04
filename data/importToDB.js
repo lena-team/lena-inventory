@@ -5,36 +5,16 @@ const Promise = require('bluebird');
 
 const DBInterface = require('../db');
 const categories = require('./categories.json');
+const {
+  getCategoryIds,
+  getDBProduct,
+  getDBProductImg,
+} = require('../db/helpers.js');
 
 // starts throwing errors when reaches 7000
 const MAX_PRODUCTS_PER_BATCH = 6000;
 
 const db = new DBInterface();
-
-const getCategoryIds = (categoriesJSON) => {
-  const results = {};
-  categoriesJSON.categories.forEach(({ id, name }) => {
-    results[name] = id;
-  });
-  return results;
-};
-
-const getDBProduct = (product, categoryIds) => ({
-  id: product.id,
-  created_at: product.createdAt,
-  updated_at: product.updatedAt,
-  name: product.name,
-  description: product.description,
-  cat_id: categoryIds[product.category],
-  standard_price: product.standardPrice,
-  discounted_price: product.discountedPrice,
-});
-
-const getDBProductImg = (productImg, product) => ({
-  product_id: product.id,
-  img_url: productImg.imgUrl,
-  primary_img: productImg.primaryImg,
-});
 
 const importToDB = () => {
   const categoryIds = getCategoryIds(categories);
