@@ -15,14 +15,16 @@ const PRODUCT_FIELDS = ['id', 'created_at', 'updated_at', 'name', 'description',
 const CATEGORY_FIELDS = ['id', 'name', 'parent_cat_id'];
 const PRODUCT_IMG_FIELDS = ['product_id', 'img_url', 'primary_img'];
 
+const defaultSettings = {
+  user: process.env.LENA_INVENTORY_DB_USER || 'postgres',
+  host: process.env.LENA_INVENTORY_DB_HOST || 'localhost',
+  database: process.env.LENA_INVENTORY_DB_DATABASE || 'inventory',
+  port: process.env.LENA_INVENTORY_DB_PORT || 5432,
+};
+
 class DBInterface extends Client {
-  constructor() {
-    super({
-      user: process.env.LENA_INVENTORY_DB_USER || 'postgres',
-      host: process.env.LENA_INVENTORY_DB_HOST || 'localhost',
-      database: process.env.LENA_INVENTORY_DB_DATABASE || 'inventory',
-      port: process.env.LENA_INVENTORY_DB_PORT || 5432,
-    });
+  constructor(settings = defaultSettings) {
+    super(settings);
   }
 
   getOneProduct(id) {
