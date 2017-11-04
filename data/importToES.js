@@ -2,16 +2,12 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 const { Client } = require('elasticsearch');
-const DBInterface = require('../db');
 
 const MAX_PRODUCTS_PER_BATCH = 10000;
 
-const db = new DBInterface();
 const client = new Client({
   host: 'http://elastic:elasticpassword@localhost:9200',
 });
-
-db.connect();
 
 const getAction = product => ({
   index: {
