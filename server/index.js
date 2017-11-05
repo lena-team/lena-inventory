@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const Promise = require('bluebird');
 const { Client } = require('elasticsearch');
+const AWS = require('aws-sdk');
 
 const DBInterface = require('../db');
 const categoriesJSON = require('../data/categories.json');
@@ -12,7 +13,14 @@ const {
 } = require('../db/helpers.js');
 
 const app = express();
+AWS.config = new AWS.Config({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_ACCESS_KEY,
+  region: process.env.AWS_REGION,
+});
+const sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
 const PORT = 3000;
+const SQS_URL = 'https://sqs.us-west-1.amazonaws.com/116968041707/lena-inventory';
 
 const db = new DBInterface();
 const es = new Client({
@@ -55,6 +63,52 @@ const ESUpdate = (ESClient, product) => (
   })
 );
 
+const SQSInsert = (SQSClient, product) => {
+  const params = {
+    QueueUrl: SQS_URL,
+    MessageAttributes: {
+      product: {
+        DataType: 'String',
+        StringValue: JSON.stringify(product),
+      },
+    },
+    MessageBody: 'NEW_PRODUCT',
+  };
+
+  return new Promise((resolve, reject) => {
+    SQSClient.sendMessage(params, (err, data) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
+  });
+};
+
+const SQSUpdate = (SQSClient, product) => {
+  const params = {
+    QueueUrl: SQS_URL,
+    MessageAttributes: {
+      product: {
+        DataType: 'String',
+        StringValue: JSON.stringify(product),
+      },
+    },
+    MessageBody: 'UPDATE_PRODUCT',
+  };
+
+  return new Promise((resolve, reject) => {
+    SQSClient.sendMessage(params, (err, data) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
+  });
+};
+
 /* REQUEST HANDLERS */
 
 const getAllProductsHandler = (req, res) => {
@@ -88,6 +142,7 @@ const postProductHandler = (req, res) => {
       db.addProduct(DBProduct),
       db.addProductImg(DBProductImgs),
       ESIndex(es, ESProduct),
+      SQSInsert(sqs, ESProduct),
     ];
 
     // send response on successful insertions
@@ -117,6 +172,7 @@ const putProductHandler = (req, res) => {
     const promises = [
       db.updateProduct(DBProduct),
       ESUpdate(es, ESProduct),
+      SQSUpdate(sqs, ESProduct),
     ];
 
     // send response on successful updates

@@ -20,7 +20,7 @@
   },
   "homepage": "https://github.com/lena-team/lena-inventory#readme",
   "dependencies": {
-    "aws-sdk": "^2.139.0",
+    "aws-sdk": "^2.145.0",
     "bluebird": "^3.5.1",
     "body-parser": "^1.18.2",
     "elasticsearch": "^13.3.1",
