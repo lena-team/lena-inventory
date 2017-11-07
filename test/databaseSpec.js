@@ -88,7 +88,12 @@ describe('Database', () => {
     let db;
 
     beforeEach((done) => {
-      db = new DBInterface();
+      db = new DBInterface({
+        user: process.env.LENA_INVENTORY_DB_USER || 'postgres',
+        host: process.env.LENA_INVENTORY_DB_HOST || 'localhost',
+        database: process.env.LENA_INVENTORY_DB_DATABASE || 'inventory_test',
+        port: process.env.LENA_INVENTORY_DB_PORT || 5432,
+      });
       db.connect();
       db.clearAllTables()
         .then(() => {
@@ -101,7 +106,10 @@ describe('Database', () => {
     });
 
     it('Should insert a new category without a parent category', (done) => {
-      const category = { name: 'cat 1' };
+      const category = {
+        id: '1',
+        name: 'cat 1',
+      };
       db.addCategory(category)
         .then(() => db.query('SELECT * FROM category'))
         .then((results) => {
@@ -116,8 +124,15 @@ describe('Database', () => {
     });
 
     it('Should insert a new category with a parent category', (done) => {
-      const parentCategory = { name: 'cat 1' };
-      const category = { name: 'cat 1.1' };
+      const parentCategory = {
+        id: '1',
+        name: 'cat 1',
+      };
+      const category = {
+        id: '1.1',
+        name: 'cat 1.1',
+        parent_cat_id: '1',
+      };
       let parentCatId;
       db.addCategory(parentCategory)
         .then(result => result.rows[0].id)
@@ -138,8 +153,12 @@ describe('Database', () => {
     });
 
     it('Should insert a new product', (done) => {
-      const category = { name: 'cat 1' };
+      const category = {
+        id: '1',
+        name: 'cat 1',
+      };
       const product = {
+        id: '1',
         name: 'name',
         description: 'desc',
         standard_price: '$100.00',
@@ -163,13 +182,18 @@ describe('Database', () => {
     });
 
     it('Should insert a new product image', (done) => {
-      const category = { name: 'cat 1' };
+      const category = {
+        id: '1',
+        name: 'cat 1',
+      };
       const product = {
+        id: '1',
         name: 'name',
         description: 'desc',
         standard_price: '$100.00',
       };
       const productImg = {
+        id: '1',
         img_url: 'http://www.google.com/logo.jpg',
         primary_img: true,
       };
@@ -194,8 +218,12 @@ describe('Database', () => {
     });
 
     it('Should get a product with a specified id', (done) => {
-      const category = { name: 'cat 1' };
+      const category = {
+        id: '1',
+        name: 'cat 1',
+      };
       const product = {
+        id: '1',
         name: 'name',
         description: 'desc',
         standard_price: '$100.00',
@@ -222,14 +250,19 @@ describe('Database', () => {
     });
 
     it('Should get all products when no id is provided', (done) => {
-      const category = { name: 'cat 1' };
       let catId;
+      const category = {
+        id: '1',
+        name: 'cat 1',
+      };
       const product1 = {
+        id: '1',
         name: 'name',
         description: 'desc',
         standard_price: '$100.00',
       };
       const product2 = {
+        id: '2',
         name: 'name2',
         description: 'desc2',
         standard_price: '$150.00',
@@ -267,6 +300,7 @@ describe('Database', () => {
     it('Should update a product', (done) => {
       let productId;
       const product = {
+        id: '1',
         name: 'name',
         description: 'desc',
         standard_price: '$100.00',
@@ -297,15 +331,18 @@ describe('Database', () => {
     it('Should insert multiple products in one batch', (done) => {
       const products = [
         {
+          id: '1',
           name: 'p1',
           description: 'd1',
           standard_price: '$1.00',
         }, {
+          id: '2',
           name: 'p2',
           description: 'd2',
           standard_price: '$2.00',
           discounted_price: '$1.00',
         }, {
+          id: '3',
           name: 'p3',
           description: 'd3',
           standard_price: '$3.00',
@@ -346,8 +383,10 @@ describe('Database', () => {
     it('Should insert multiple categories in one batch', (done) => {
       const categories = [
         {
+          id: '1',
           name: 'c1',
         }, {
+          id: '2',
           name: 'c2',
         },
       ];
@@ -369,6 +408,7 @@ describe('Database', () => {
 
     it('Should insert multiple product images in one batch', (done) => {
       const product = {
+        id: '1',
         name: 'p1',
         description: 'd1',
         standard_price: '$1.00',
@@ -376,12 +416,15 @@ describe('Database', () => {
 
       const productImgs = [
         {
+          id: '1',
           img_url: 'url1',
           primary_img: true,
         }, {
+          id: '2',
           img_url: 'url2',
           primary_img: false,
         }, {
+          id: '3',
           img_url: 'url3',
           primary_img: false,
         },
