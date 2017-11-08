@@ -24,7 +24,7 @@ const SQS_URL = 'https://sqs.us-west-1.amazonaws.com/116968041707/lena-inventory
 
 const db = new DBInterface();
 const es = new Client({
-  host: 'http://elastic:elasticpassword@localhost:9200',
+  host: 'elasticsearch',
 });
 
 db.connect()
