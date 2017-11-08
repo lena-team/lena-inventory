@@ -1,6 +1,3 @@
--- DROP DATABASE IF EXISTS inventory;
--- CREATE DATABASE inventory;
-
 CREATE TABLE IF NOT EXISTS category (
   id char(36) PRIMARY KEY,
   name varchar(40) NOT NULL UNIQUE,
