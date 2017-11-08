@@ -1,14 +1,20 @@
 version: "2"
 
 services:
+  postgres:
+    build:
+      context: .
+      dockerfile: ./postgres.Dockerfile
+    restart: always
+      
   node:
-    image: "node:9.0"
-    user: "node"
-    working_dir: /home/node/app
-    environment:
-      - NODE_ENV=production
+    build:
+      context: .
+      dockerfile: ./node.Dockerfile
     volumes:
-      - .:/home/node/app
+      - .:/usr/src/app
     ports:
       - "3000:3000"
-    command: "npm start"
+    depends_on:
+      - postgres
+    command: ["npm", "start"]
