@@ -6,6 +6,9 @@ services:
       context: .
       dockerfile: ./postgres.Dockerfile
     restart: always
+
+  elasticsearch:
+    image: elasticsearch
       
   node:
     build:
@@ -17,4 +20,5 @@ services:
       - "3000:3000"
     depends_on:
       - postgres
+      - elasticsearch
     command: ["npm", "start"]
